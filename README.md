@@ -1,112 +1,85 @@
-# ETL-Logistic-Regression
-HR Analytics: Job Change of Data Scientists
+# ETL & Logistic Regression
+## HR Analytics: Job Change of Data Scientists
 
-from google.colab import drive
-drive.mount('/content/drive')
+## Intorduction
+### Context and Content
 
-import pandas as pd
+A company which is active in Big Data and Data Science wants to hire data scientists among people who successfully pass some courses which conduct by the company.
 
-Enrollies_data = pd.read_excel('/content/drive/MyDrive/bài tập/Enrollies.xlsx')
+Many people signup for their training. Company wants to know which of these candidates are really wants to work for the company after training or looking for a new employment because it helps to reduce the cost and time as well as the quality of training or planning the courses and categorization of candidates.
 
-Enrollies_data.head()
+Information related to demographics, education, experience are in hands from candidates signup and enrollment.
 
-Enrollies_data.info()
+### Data Sources
+#### 1. Enrollies' data
+As enrollies are submitting their request to join the course via Google Forms, we have the Google Sheet that stores data about enrolled students, containing the following columns:
 
-mode_gender = Enrollies_data['gender'].mode()[0]
-Enrollies_data['gender'] = Enrollies_data['gender'].fillna(mode_gender)
+enrollee_id: unique ID of an enrollee
+full_name: full name of an enrollee
+city: the name of an enrollie's city
+gender: gender of an enrollee
+#### The source: https://docs.google.com/spreadsheets/d/1VCkHwBjJGRJ21asd9pxW4_0z2PWuKhbLR3gUHm-p4GI/edit?usp=sharing
 
-Look at data the column full_name has the object type, let change to string
+#### 2. Enrollies' education
+After enrollment everyone should fill the form about their education level. This form is being digitalized manually. Educational department stores it in the Excel format here: https://assets.swisscoding.edu.vn/company_course/enrollies_education.xlsx
 
-Enrollies_data['full_name'] = Enrollies_data['full_name'].astype('string')
+This table contains the following columns:
 
-asdas
+enrollee_id: A unique identifier for each enrollee. This integer value uniquely distinguishes each participant in the dataset.
 
-Enrollies_data['city'] = Enrollies_data['city'].astype('category')
-Enrollies_data['gender'] = Enrollies_data['gender'].astype('category')
+enrolled_university: Indicates the enrollee's university enrollment status. Possible values include no_enrollment, Part time course, and Full time course.
 
-Enrollies_data.info()
+education_level: Represents the highest level of education attained by the enrollee. Examples include Graduate, Masters, etc.
 
-enrollies_education = pd.read_excel('/content/drive/MyDrive/bài tập/enrollies_education.xlsx')
+major_discipline: Specifies the primary field of study for the enrollee. Examples include STEM, Business Degree, etc.
 
-enrollies_education.head()
+#### 3. Enrollies' working experience
+Another survey that is being collected manually by educational department is about working experience.
 
-enrollies_education.info()
+Educational department stores it in the CSV format here: https://assets.swisscoding.edu.vn/company_course/work_experience.csv
 
-enrollies_education['enrolled_university'] = enrollies_education['enrolled_university'].astype('category')
-enrollies_education['education_level'] = enrollies_education['education_level'].astype('category')
-enrollies_education['major_discipline'] = enrollies_education['major_discipline'].astype('category')
+This table contains the following columns:
 
-enrollies_education['enrolled_university'] = enrollies_education['enrolled_university'].str.lower()
-enrollies_education['education_level'] = enrollies_education['education_level'].str.lower()
-enrollies_education['major_discipline'] = enrollies_education['major_discipline'].str.lower()
+enrollee_id: A unique identifier for each enrollee. This integer value uniquely distinguishes each participant in the dataset.
 
-enrollies_education.info()
+relevent_experience: Indicates whether the enrollee has relevant work experience related to the field they are currently studying or working in. Possible values include Has relevent experience and No relevent experience.
 
-enrollies_education['enrolled_university'] = enrollies_education['enrolled_university'].fillna('Missing')
-enrollies_education['education_level'] = enrollies_education['education_level'].fillna('Missing')
-enrollies_education['major_discipline'] = enrollies_education['major_discipline'].fillna('Missing')
+experience: Represents the number of years of work experience the enrollee has. This can be a specific number or a range (e.g., >20, <1).
 
-enrollies_education.sample(10)
+company_size: Specifies the size of the company where the enrollee has worked, based on the number of employees. Examples include 50−99, 100−500, etc.
 
-enrollies_education.info()
+company_type: Indicates the type of company where the enrollee has worked. Examples include Pvt Ltd, Funded Startup, etc.
 
-work_experience = pd.read_csv('/content/drive/MyDrive/bài tập/work_experience.csv')
+last_new_job: Represents the number of years since the enrollee's last job change. Examples include never, >4, 1, etc.
 
-work_experience.sample(10)
+#### 4. Training hours
+From LMS system's database you can retrieve a number of training hours for each student that they have completed.
 
-work_experience.info()
+Database credentials:
 
-work_experience['company_size'] = work_experience['company_size'].str.lower()
-work_experience['company_type'] = work_experience['company_type'].str.lower()
-work_experience['last_new_job'] = work_experience['last_new_job'].str.lower()
+Database type: MySQL
+Host: 112.213.86.31
+Port: 3360
+Login: etl_practice
+Password: 550814
+Database name: company_course
+Table name: training_hours
+#### 5. City development index
+Another source that can be usefull is the table of City development index.
 
-mode_ex = work_experience['experience'].mode()[0]
-work_experience['experience'] = work_experience['experience'].fillna(mode_ex)
+The City Development Index (CDI) is a measure designed to capture the level of development in cities. It may be significant for the resulting prediction of student's employment motivation.
 
-work_experience['company_size'] = work_experience['company_size'].fillna('Missing')
-work_experience['company_type'] = work_experience['company_type'].fillna('Missing')
-work_experience['last_new_job'] = work_experience['last_new_job'].fillna('Missing')
+It is stored here: https://sca-programming-school.github.io/city_development_index/index.html
 
-work_experience['relevent_experience'] = work_experience['relevent_experience'].astype('category')
-work_experience['company_size'] = work_experience['company_size'].astype('category')
-work_experience['company_type'] = work_experience['company_type'].astype('category')
-work_experience['last_new_job'] = work_experience['last_new_job'].astype('category')
-work_experience['experience'] = work_experience['experience'].astype('category')
+#### 6. Employment
+From LMS database you can also retrieve the fact of employment. If student is marked as employed, it means that this student started to work in our company after finishing the course.
 
-work_experience.info()
+Database credentials:
 
-from sqlalchemy import create_engine
-!pip install pymysql
-
-engine = create_engine('mysql+pymysql://etl_practice:550814@112.213.86.31:3360/company_course')
-training_hours = pd.read_sql_table('training_hours', con=engine)
-
-training_hours.head()
-
-training_hours.info()
-
-url = 'https://sca-programming-school.github.io/city_development_index/index.html'
-table = pd.read_html(url)
-city_development_index = table[0]
-
-city_development_index.head()
-
-city_development_index.info()
-
-employment = pd.read_sql_table('employment', con=engine)
-
-
-employment.head()
-
-# Path to the SQLite database
-db_path = 'data_warehouse.db'
-
-# Create an SQLAlchemy engine
-engine = create_engine(f'sqlite:///{db_path}')
-
-Enrollies_data.to_sql('Enrollies_data', con=engine, if_exists='replace',index=False)
-enrollies_education.to_sql('enrollines_education', con=engine, if_exists='replace',index=False)
-work_experience.to_sql('work_experience', con=engine, if_exists='replace',index=False)
-training_hours.to_sql('training_hours', con=engine, if_exists='replace',index=False)
-city_development_index.to_sql('city_development_index', con=engine, if_exists='replace',index=False)
-employment.to_sql('employment', con=engine, if_exists='replace',index=False)
+Database type: MySQL
+Host: 112.213.86.31
+Port: 3360
+Login: etl_practice
+Password: 550814
+Database name: company_course
+Table name: employment
